@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: AWS Learnings - I (Creating EC2 instance)
+Description: AWS Learnings - 1st  (Creating EC2 instance)
 
 Parameters:
   InstanceTypeParameter:
