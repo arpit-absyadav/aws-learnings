@@ -1,0 +1,84 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: AWS Learnings - I (Creating EC2 instance)
+
+Parameters:
+  InstanceTypeParameter:
+    Type: String
+    Default: t2.micro
+    Description: Setting up Default instance t2-micro for free use.
+  AWSLearning:
+    Type: String
+    Description: AWSLearning
+  AMI:
+    Type: String
+    Default: ami-0912f71e06545ad88
+    Description: Setting up AMI type as HVM  SSD backed 64 bit
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: Target VPC
+  SubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: ap-south-1a
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.0.0/24
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: "AWS learning - Target First Instance By CF"
+      GroupDescription: "Personal workstation for AWS Learnings"
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: "3000"
+          ToPort: "3000"
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: "22"
+          ToPort: "22"
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      SubnetId: !Ref SubnetA
+      ImageId: !Ref AMI
+      InstanceType:
+        Ref: InstanceTypeParameter
+      KeyName: AWSLearning
+      SecurityGroupIds:
+        - Ref: InstanceSecurityGroup
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeType: gp2
+            DeleteOnTermination: false
+            VolumeSize: 8
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          yum update -y
+          curl -sL https://rpm.nodesource.com/setup_lts.x | bash -
+
+          yum install nodejs -y
+      Tags:
+        - Key: OS
+          Value: Amazon Linux 2
+        - Key: Owner
+          Value: Arpit Yadav
+
+Outputs:
+  EC2Details:
+    Value: !Ref EC2Instance
